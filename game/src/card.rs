@@ -1,7 +1,7 @@
 use bevy::{ecs::component::Component, prelude::Deref};
 use enum_iterator::Sequence;
 
-#[derive(Clone, Copy, Sequence)]
+#[derive(Clone, Copy, Sequence, PartialEq, Eq)]
 #[repr(usize)]
 pub enum CardSuit {
     Hearts,

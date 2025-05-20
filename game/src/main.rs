@@ -2,6 +2,9 @@
 
 mod assets;
 mod card;
+mod card_drag_drop;
+mod card_filter;
+mod card_slot;
 mod sprite_repr;
 
 use std::{
@@ -10,15 +13,22 @@ use std::{
 };
 
 use assets::AssetHandles;
-use bevy::{picking::hover::HoverMap, prelude::*, state::commands, transform::helper};
+use bevy::{gizmos, picking::hover::HoverMap, prelude::*, state::commands, transform::helper};
 use card::{Card, CardSuit};
+use card_drag_drop::CardDragDropPlugin;
+use card_slot::{CardSlot, CardSlotPlugin, PlacementOfCard};
 use sprite_repr::SpriteReprPlugin;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, SpriteReprPlugin))
+        .add_plugins((
+            DefaultPlugins,
+            SpriteReprPlugin,
+            CardDragDropPlugin,
+            CardSlotPlugin,
+        ))
         .insert_resource(SpritePickingSettings {
-            require_markers: true,
+            picking_mode: SpritePickingMode::BoundingBox,
             ..Default::default()
         })
         .add_systems(PreStartup, load_assets)
@@ -30,8 +40,45 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(AssetHandles::load(&asset_server));
 }
 
-fn setup_scene(mut commands: Commands, assets: Res<AssetHandles>) {
+fn setup_scene(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    commands.spawn(Card::new(CardSuit::Hearts, 13));
+    // Cards
+    commands.spawn((
+        CardSlot::Empty,
+        Pickable::default(),
+        Transform::from_xyz(-300.0, 200.0, 0.0),
+        related![PlacementOfCard[(Card::new(CardSuit::Hearts, 11), Pickable::default(),)]],
+    ));
+    commands.spawn((
+        CardSlot::Empty,
+        Pickable::default(),
+        Transform::from_xyz(-100.0, 200.0, 0.0),
+        related![PlacementOfCard[(Card::new(CardSuit::Spades, 10), Pickable::default(),)]],
+    ));
+    commands.spawn((
+        CardSlot::Empty,
+        Pickable::default(),
+        Transform::from_xyz(100.0, 200.0, 0.0),
+        related![PlacementOfCard[(Card::new(CardSuit::Diamonds, 13), Pickable::default(),)]],
+    ));
+    commands.spawn((
+        CardSlot::Empty,
+        Pickable::default(),
+        Transform::from_xyz(300.0, 200.0, 0.0),
+        related![PlacementOfCard[(Card::new(CardSuit::Clubs, 2), Pickable::default(),)]],
+    ));
+
+    // Card Slots
+    commands.spawn((
+        CardSlot::Body,
+        Pickable::default(),
+        Transform::from_xyz(-100.0, -150.0, 0.0),
+    ));
+
+    commands.spawn((
+        CardSlot::Weapon,
+        Pickable::default(),
+        Transform::from_xyz(100.0, -150.0, 0.0),
+    ));
 }
