@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 bevy = "0.16.0"
+enum-iterator = "2.1.0"
