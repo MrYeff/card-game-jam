@@ -16,6 +16,7 @@ use assets::AssetHandles;
 use bevy::{gizmos, picking::hover::HoverMap, prelude::*, state::commands, transform::helper};
 use card::{Card, CardSuit};
 use card_drag_drop::CardDragDropPlugin;
+use card_filter::CardFilter;
 use card_slot::{CardSlot, CardSlotPlugin, PlacementOfCard};
 use sprite_repr::SpriteReprPlugin;
 
@@ -74,11 +75,13 @@ fn setup_scene(mut commands: Commands) {
         CardSlot::Body,
         Pickable::default(),
         Transform::from_xyz(-100.0, -150.0, 0.0),
+        CardFilter::empty().with_suit([CardSuit::Hearts]),
     ));
 
     commands.spawn((
         CardSlot::Weapon,
         Pickable::default(),
         Transform::from_xyz(100.0, -150.0, 0.0),
+        CardFilter::empty().with_suit([CardSuit::Diamonds]),
     ));
 }

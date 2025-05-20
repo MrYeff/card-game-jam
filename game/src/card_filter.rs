@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::card::{Card, CardSuit};
 
 #[derive(Component, Default, Clone)]
-struct CardFilter {
+pub struct CardFilter {
     suits: Vec<CardSuit>,
     /// included
     rank_min: Option<u32>,
@@ -22,7 +22,7 @@ impl CardFilter {
         Default::default()
     }
 
-    pub fn with_allow_suits(mut self, suits: impl IntoIterator<Item = CardSuit>) -> Self {
+    pub fn with_suit(mut self, suits: impl IntoIterator<Item = CardSuit>) -> Self {
         self.suits = suits.into_iter().collect();
         self
     }

@@ -2,6 +2,7 @@ use bevy::{prelude::*, state::commands};
 
 use crate::{
     card::Card,
+    card_filter::CardFilter,
     card_slot::{CardSlot, PlacedOnSlot, PlacementOfCard},
 };
 
@@ -11,8 +12,6 @@ struct Locked;
 
 #[derive(Component)]
 struct DragStartPoint(Vec3);
-
-type DomainQF = (With<Card>, Without<Locked>);
 
 pub struct CardDragDropPlugin;
 
@@ -27,7 +26,7 @@ impl Plugin for CardDragDropPlugin {
 
 fn handle_drag_start(
     tr: Trigger<Pointer<DragStart>>,
-    cards: Query<&Transform, DomainQF>,
+    cards: Query<&Transform, (With<Card>, Without<Locked>)>,
     mut commands: Commands,
 ) {
     let entity = tr.target();
@@ -40,7 +39,10 @@ fn handle_drag_start(
         .insert(DragStartPoint(trf.translation));
 }
 
-fn handle_drag(tr: Trigger<Pointer<Drag>>, mut tf: Query<&mut Transform, DomainQF>) {
+fn handle_drag(
+    tr: Trigger<Pointer<Drag>>,
+    mut tf: Query<&mut Transform, (With<Card>, Without<Locked>)>,
+) {
     let Ok(mut tf) = tf.get_mut(tr.target()) else {
         return;
     };
@@ -49,29 +51,33 @@ fn handle_drag(tr: Trigger<Pointer<Drag>>, mut tf: Query<&mut Transform, DomainQ
 
 fn handle_drag_drop(
     tr: Trigger<Pointer<DragDrop>>,
-    mut cards: Query<(), DomainQF>,
-    slots: Query<(), (With<CardSlot>, Without<PlacementOfCard>)>,
+    mut cards: Query<&Card, (Without<Locked>)>,
+    slots: Query<Option<&CardFilter>, (With<CardSlot>, Without<PlacementOfCard>)>,
     mut commands: Commands,
 ) {
-    let card = tr.dropped;
-    if !cards.contains(card) {
+    let entity = tr.dropped;
+    let Ok(card) = cards.get(entity) else {
         return;
-    }
+    };
 
     let slot = tr.target();
-    if !slots.contains(slot) {
+    let Ok(cf) = slots.get(slot) else {
+        return;
+    };
+
+    if cf.is_some_and(|cf| !cf.check(card)) {
         return;
     }
 
     commands
-        .entity(card)
+        .entity(entity)
         .remove::<DragStartPoint>()
         .insert(PlacedOnSlot(slot));
 }
 
 fn handle_drag_end(
     tr: Trigger<Pointer<DragEnd>>,
-    mut cards: Query<Option<(&mut Transform, &DragStartPoint)>, DomainQF>,
+    mut cards: Query<Option<(&mut Transform, &DragStartPoint)>, (With<Card>, Without<Locked>)>,
     mut commands: Commands,
 ) {
     let Ok(card) = cards.get_mut(tr.target()) else {
