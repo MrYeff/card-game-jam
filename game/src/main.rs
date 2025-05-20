@@ -7,13 +7,8 @@ mod card_filter;
 mod card_slot;
 mod sprite_repr;
 
-use std::{
-    cmp::{max, min},
-    result::{self, Result},
-};
-
 use assets::AssetHandles;
-use bevy::{gizmos, picking::hover::HoverMap, prelude::*, state::commands, transform::helper};
+use bevy::prelude::*;
 use card::{Card, CardSuit};
 use card_drag_drop::CardDragDropPlugin;
 use card_filter::CardFilter;

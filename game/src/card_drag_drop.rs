@@ -1,4 +1,4 @@
-use bevy::{prelude::*, state::commands};
+use bevy::prelude::*;
 
 use crate::{
     card::Card,
@@ -51,7 +51,7 @@ fn handle_drag(
 
 fn handle_drag_drop(
     tr: Trigger<Pointer<DragDrop>>,
-    mut cards: Query<&Card, (Without<Locked>)>,
+    cards: Query<&Card, Without<Locked>>,
     slots: Query<Option<&CardFilter>, (With<CardSlot>, Without<PlacementOfCard>)>,
     mut commands: Commands,
 ) {
@@ -75,6 +75,7 @@ fn handle_drag_drop(
         .insert(PlacedOnSlot(slot));
 }
 
+#[allow(clippy::type_complexity)]
 fn handle_drag_end(
     tr: Trigger<Pointer<DragEnd>>,
     mut cards: Query<Option<(&mut Transform, &DragStartPoint)>, (With<Card>, Without<Locked>)>,

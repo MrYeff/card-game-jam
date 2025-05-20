@@ -1,4 +1,4 @@
-use bevy::{ecs::component::Component, prelude::Deref};
+use bevy::ecs::component::Component;
 use enum_iterator::Sequence;
 
 #[derive(Clone, Copy, Sequence, PartialEq, Eq)]
@@ -25,7 +25,7 @@ impl Card {
     pub const fn new(suit: CardSuit, rank: u32) -> Self {
         match Self::try_new(suit, rank) {
             Ok(t) => t,
-            Err(e) => panic!(),
+            Err(_) => panic!(),
         }
     }
 

@@ -1,6 +1,6 @@
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 
-use crate::{assets::AssetHandles, card::Card, card_slot::CardSlot};
+use crate::{assets::AssetHandles, card_slot::CardSlot};
 
 use super::SpriteRepr;
 

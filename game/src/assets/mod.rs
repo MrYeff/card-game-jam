@@ -1,10 +1,9 @@
 mod card;
 mod card_slot;
 
-use bevy::{asset::AssetPath, prelude::*};
+use bevy::prelude::*;
 use card::all_cards;
 use card_slot::all_card_slots;
-use std::fmt::{Display, Formatter};
 
 use crate::{card::Card, card_slot::CardSlot};
 
