@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use card::{Card, CardSuit};
 use card_drag_drop::CardDragDropPlugin;
 use card_filter::CardFilter;
-use card_slot::{CardSlot, CardSlotPlugin, PlacementOfCard};
+use card_slot::{CardSlotSprite, CardSlotPlugin, PlacementOfCard};
 use sprite_repr::SpriteReprPlugin;
 
 fn main() {
@@ -41,25 +41,25 @@ fn setup_scene(mut commands: Commands) {
 
     // Cards
     commands.spawn((
-        CardSlot::Empty,
+        CardSlotSprite::Empty,
         Pickable::default(),
         Transform::from_xyz(-300.0, 200.0, 0.0),
         related![PlacementOfCard[(Card::new(CardSuit::Hearts, 11), Pickable::default(),)]],
     ));
     commands.spawn((
-        CardSlot::Empty,
+        CardSlotSprite::Empty,
         Pickable::default(),
         Transform::from_xyz(-100.0, 200.0, 0.0),
         related![PlacementOfCard[(Card::new(CardSuit::Spades, 10), Pickable::default(),)]],
     ));
     commands.spawn((
-        CardSlot::Empty,
+        CardSlotSprite::Empty,
         Pickable::default(),
         Transform::from_xyz(100.0, 200.0, 0.0),
         related![PlacementOfCard[(Card::new(CardSuit::Diamonds, 13), Pickable::default(),)]],
     ));
     commands.spawn((
-        CardSlot::Empty,
+        CardSlotSprite::Empty,
         Pickable::default(),
         Transform::from_xyz(300.0, 200.0, 0.0),
         related![PlacementOfCard[(Card::new(CardSuit::Clubs, 2), Pickable::default(),)]],
@@ -67,14 +67,14 @@ fn setup_scene(mut commands: Commands) {
 
     // Card Slots
     commands.spawn((
-        CardSlot::Body,
+        CardSlotSprite::Body,
         Pickable::default(),
         Transform::from_xyz(-100.0, -150.0, 0.0),
         CardFilter::empty().with_suit([CardSuit::Hearts]),
     ));
 
     commands.spawn((
-        CardSlot::Weapon,
+        CardSlotSprite::Weapon,
         Pickable::default(),
         Transform::from_xyz(100.0, -150.0, 0.0),
         CardFilter::empty().with_suit([CardSuit::Diamonds]),

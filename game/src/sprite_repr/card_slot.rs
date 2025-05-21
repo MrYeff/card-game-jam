@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{assets::AssetHandles, card_slot::CardSlot};
+use crate::{assets::AssetHandles, card_slot::CardSlotSprite};
 
 use super::SpriteRepr;
 
-impl SpriteRepr for CardSlot {
+impl SpriteRepr for CardSlotSprite {
     fn to_sprite(&self, assets: &AssetHandles) -> Sprite {
         Sprite {
             image: assets.get_card_slot_image(*self),

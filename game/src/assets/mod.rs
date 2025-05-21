@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use card::all_cards;
 use card_slot::all_card_slots;
 
-use crate::{card::Card, card_slot::CardSlot};
+use crate::{card::Card, card_slot::CardSlotSprite};
 
 #[derive(Resource)]
 pub struct AssetHandles {
@@ -35,7 +35,7 @@ impl AssetHandles {
         self.card_fronts[(card.rank() - 1) as usize][card.suit() as usize].clone_weak()
     }
 
-    pub fn get_card_slot_image(&self, card_slot: CardSlot) -> Handle<Image> {
+    pub fn get_card_slot_image(&self, card_slot: CardSlotSprite) -> Handle<Image> {
         self.card_slots[card_slot as usize].clone_weak()
     }
 }

@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 use enum_iterator::Sequence;
 
+#[derive(Component, Default)]
+pub struct CardSlot;
+
 #[derive(Component, Sequence, Clone, Copy)]
+#[require(CardSlot)]
 #[repr(usize)]
-pub enum CardSlot {
+pub enum CardSlotSprite {
     Empty,
     Weapon,
     Body,

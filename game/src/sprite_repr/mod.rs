@@ -2,7 +2,7 @@ mod card;
 mod card_slot;
 use bevy::prelude::*;
 
-use crate::{assets::AssetHandles, card::Card, card_slot::CardSlot};
+use crate::{assets::AssetHandles, card::Card, card_slot::CardSlotSprite};
 
 trait SpriteRepr: Component + Sized {
     fn to_sprite(&self, assets: &AssetHandles) -> Sprite;
@@ -29,7 +29,7 @@ pub struct SpriteReprPlugin;
 impl Plugin for SpriteReprPlugin {
     fn build(&self, app: &mut App) {
         register::<Card>(app);
-        register::<CardSlot>(app);
+        register::<CardSlotSprite>(app);
     }
 }
 
