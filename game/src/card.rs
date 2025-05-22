@@ -1,4 +1,4 @@
-use bevy::ecs::component::Component;
+use bevy::{ecs::component::Component, render::view::Visibility};
 use enum_iterator::Sequence;
 
 #[derive(Clone, Copy, Sequence, PartialEq, Eq)]
@@ -12,6 +12,7 @@ pub enum CardSuit {
 
 #[derive(Clone, Component)]
 #[component(immutable)]
+#[require(Visibility = Visibility::Visible)]
 pub struct Card {
     suit: CardSuit,
     rank: u32,

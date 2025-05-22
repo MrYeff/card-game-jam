@@ -9,6 +9,7 @@ impl From<&CardSlotSprite> for AssetPath<'_> {
             CardSlotSprite::Empty => "empty",
             CardSlotSprite::Weapon => "weapon",
             CardSlotSprite::Body => "body",
+            CardSlotSprite::Enemy => "enemy",
         };
 
         AssetPath::from(format!("slots/{}.png", s))

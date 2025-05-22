@@ -21,9 +21,11 @@ use bevy::{
     sprite::Anchor,
 };
 use card::{Card, CardSuit};
-use card_drag_drop::CardDragDropPlugin;
+use card_drag_drop::{CardDragDropPlugin, Locked};
 use card_filter::CardFilter;
-use card_slot::{CardSlotPlugin, CardSlotSprite, PlacedOnSlot, PlacementOfCard, RecievedCard};
+use card_slot::{
+    CardSlotPlugin, CardSlotSprite, PlacedOnSlot, PlacementOfCard, RecievedCard, ShowWhenOcupied,
+};
 use despawn::{DespawnDelayed, DespawnPlugin};
 use health::{AdjustHealth, Health, HealthPlugin, MaxHealth};
 use sprite_repr::SpriteReprPlugin;
@@ -64,6 +66,7 @@ fn setup_scene(mut commands: Commands) {
     // Cards
     commands.spawn((
         CardSlotSprite::Empty,
+        ShowWhenOcupied,
         Pickable::default(),
         Transform::from_xyz(-300.0, 200.0, 0.0),
         related![
@@ -76,6 +79,7 @@ fn setup_scene(mut commands: Commands) {
     ));
     commands.spawn((
         CardSlotSprite::Empty,
+        ShowWhenOcupied,
         Pickable::default(),
         Transform::from_xyz(-100.0, 200.0, 0.0),
         related![
@@ -88,6 +92,7 @@ fn setup_scene(mut commands: Commands) {
     ));
     commands.spawn((
         CardSlotSprite::Empty,
+        ShowWhenOcupied,
         Pickable::default(),
         Transform::from_xyz(100.0, 200.0, 0.0),
         related![
@@ -100,6 +105,7 @@ fn setup_scene(mut commands: Commands) {
     ));
     commands.spawn((
         CardSlotSprite::Empty,
+        ShowWhenOcupied,
         Pickable::default(),
         Transform::from_xyz(300.0, 200.0, 0.0),
         related![
@@ -113,7 +119,12 @@ fn setup_scene(mut commands: Commands) {
 
     // Card Slots
     let body = commands
-        .spawn((Name::new("Body"), CardSlotSprite::Body, Pickable::default()))
+        .spawn((
+            Name::new("Body"),
+            CardSlotSprite::Body,
+            ShowWhenOcupied,
+            Pickable::default(),
+        ))
         .observe(handle_card_on_body)
         .id();
 
@@ -153,10 +164,12 @@ fn setup_scene(mut commands: Commands) {
         .spawn((
             Name::new("Weapon"),
             CardSlotSprite::Weapon,
+            ShowWhenOcupied,
             Pickable::default(),
             Transform::from_xyz(100.0, -150.0, 0.0),
             CardFilter::empty().with_suit([CardSuit::Diamonds]),
         ))
+        .observe(handle_card_on_weapon)
         .id();
 
     commands
@@ -221,4 +234,70 @@ fn handle_card_on_body(
             commands.entity(card_e).trigger(DespawnDelayed);
         }
     }
+}
+
+type HandleEnemyOnEnemySystem = Box<
+    dyn Fn(Trigger<RecievedCard>, Query<&Card, With<PlacedOnSlot>>, Commands)
+        + Send
+        + Sync
+        + 'static,
+>;
+
+fn make_handle_enemy_on_enemy(card_rank: u32) -> HandleEnemyOnEnemySystem {
+    Box::new(
+        move |tr: Trigger<RecievedCard>,
+              cards: Query<&Card, With<PlacedOnSlot>>,
+              mut commands: Commands| {
+            let card_e = tr.0;
+            let card = cards.get(card_e).unwrap();
+
+            commands
+                .entity(card_e)
+                .insert(Locked)
+                .with_child((
+                    CardSlotSprite::Enemy,
+                    Pickable::default(),
+                    Transform::from_xyz(0.0, -40.0, 1.0),
+                    CardFilter::empty()
+                        .with_suit([CardSuit::Clubs, CardSuit::Spades])
+                        .with_max_rank(card_rank - 1),
+                ))
+                .observe(make_handle_enemy_on_enemy(card.rank() - 1));
+        },
+    )
+}
+
+fn handle_card_on_weapon(tr: Trigger<RecievedCard>, mut commands: Commands) {
+    let card_e = tr.0;
+
+    commands
+        .entity(card_e)
+        .insert(Locked)
+        .with_child((
+            CardSlotSprite::Enemy,
+            Pickable::default(),
+            Transform::from_xyz(0.0, -40.0, 1.0),
+            CardFilter::empty().with_suit([CardSuit::Clubs, CardSuit::Spades]),
+        ))
+        .observe(handle_enemy_on_weapon);
+}
+
+fn handle_enemy_on_weapon(
+    tr: Trigger<RecievedCard>,
+    cards: Query<&Card, With<PlacedOnSlot>>,
+    mut commands: Commands,
+) {
+    let card_e = tr.0;
+    let card = cards.get(card_e).unwrap();
+
+    commands
+        .entity(card_e)
+        .insert(Locked)
+        .with_child((
+            CardSlotSprite::Enemy,
+            Pickable::default(),
+            Transform::from_xyz(0.0, -40.0, 1.0),
+            CardFilter::empty().with_suit([CardSuit::Clubs, CardSuit::Spades]),
+        ))
+        .observe(make_handle_enemy_on_enemy(card.rank()));
 }

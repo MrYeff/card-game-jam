@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{log::tracing::Instrument, prelude::*};
 use enum_iterator::Sequence;
 
 #[derive(Component, Default)]
@@ -11,6 +11,7 @@ pub enum CardSlotSprite {
     Empty,
     Weapon,
     Body,
+    Enemy,
 }
 
 #[derive(Component)]
@@ -42,6 +43,7 @@ impl Plugin for CardSlotPlugin {
 fn handle_placed_on_added(
     tr: Trigger<OnInsert, PlacedOnSlot>,
     placed_on: Query<&PlacedOnSlot>,
+    show: Query<(), With<ShowWhenOcupied>>,
     mut commands: Commands,
 ) {
     let card = tr.target();
@@ -50,12 +52,27 @@ fn handle_placed_on_added(
         .entity(card)
         .insert((ChildOf(slot), Transform::from_xyz(0.0, 0.0, 1.0)));
 
+    if !show.contains(slot) {
+        commands.entity(slot).insert(Visibility::Hidden);
+    }
+
     commands.entity(slot).trigger(RecievedCard(card));
 }
 
-fn handle_placed_on_removed(tr: Trigger<OnRemove, PlacedOnSlot>, mut commands: Commands) {
-    let entity = tr.target();
-    if let Ok(mut ec) = commands.get_entity(entity) {
+// TODO investigate why this is not called
+fn handle_placed_on_removed(
+    tr: Trigger<OnRemove, PlacedOnSlot>,
+    placed_on: Query<&PlacedOnSlot>,
+    mut commands: Commands,
+) {
+    let card = tr.target();
+    if let Ok(mut ec) = commands.get_entity(card) {
         ec.try_remove::<ChildOf>();
     }
+
+    let slot = placed_on.get(card).unwrap().0;
+    commands.entity(slot).insert(Visibility::Inherited);
 }
+
+#[derive(Component)]
+pub struct ShowWhenOcupied;

@@ -8,7 +8,7 @@ use crate::{
 
 /// marks if a card can be moved
 #[derive(Component)]
-struct Locked;
+pub struct Locked;
 
 #[derive(Component)]
 struct DragStartPoint(Vec3);
@@ -26,17 +26,19 @@ impl Plugin for CardDragDropPlugin {
 
 fn handle_drag_start(
     tr: Trigger<Pointer<DragStart>>,
-    cards: Query<&Transform, (With<Card>, Without<Locked>)>,
+    mut cards: Query<&mut Transform, (With<Card>, Without<Locked>)>,
     mut commands: Commands,
 ) {
     let entity = tr.target();
-    let Ok(trf) = cards.get(entity) else {
+    let Ok(mut trf) = cards.get_mut(entity) else {
         return;
     };
     commands
         .entity(entity)
         .remove::<Pickable>()
         .insert(DragStartPoint(trf.translation));
+
+    trf.translation.z = 100.0;
 }
 
 fn handle_drag(

@@ -10,7 +10,7 @@ use crate::{card::Card, card_slot::CardSlotSprite};
 #[derive(Resource)]
 pub struct AssetHandles {
     card_fronts: [[Handle<Image>; 4]; 13],
-    card_slots: [Handle<Image>; 3],
+    card_slots: [Handle<Image>; 4],
 }
 
 impl AssetHandles {
