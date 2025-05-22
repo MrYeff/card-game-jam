@@ -16,6 +16,7 @@ use assets::AssetHandles;
 use bevy::{
     color::palettes::css::{GRAY, GREEN, RED, WHITE},
     prelude::*,
+    sprite::Anchor,
     state::commands,
 };
 use card::{Card, CardSuit};
@@ -24,8 +25,7 @@ use card_filter::CardFilter;
 use card_slot::{CardSlotPlugin, CardSlotSprite, PlacementOfCard};
 use health::{AdjustHealth, Health, HealthPlugin, MaxHealth};
 use sprite_repr::SpriteReprPlugin;
-use status_bar::{StatusBar, StatusBarBackground, StatusBarPlugin, StatusBarRef, StatusBarType};
-
+use status_bar::{StatusBar, StatusBarPlugin, StatusBarType};
 fn main() {
     App::new()
         .add_plugins((
@@ -104,17 +104,23 @@ fn setup_test_scene(mut commands: Commands) {
         MaxHealth(20),
         Health::new(15),
         related!(
-            StatusBarRef[(
+            StatusBar[(
                 StatusBarType::<Health>::default(),
                 Sprite {
                     color: RED.into(),
+                    custom_size: Some(Vec2::new(200.0, 40.0)),
+                    anchor: Anchor::CenterLeft,
                     ..default()
                 },
-                StatusBar::new(Vec2::new(200.0, 40.0)),
-                StatusBarBackground(Sprite {
-                    color: GRAY.into(),
-                    ..default()
-                })
+                children![(
+                    Transform::from_xyz(0.0, 0.0, -1.0),
+                    Sprite {
+                        color: GRAY.into(),
+                        custom_size: Some(Vec2::new(200.0, 40.0)),
+                        anchor: Anchor::CenterLeft,
+                        ..default()
+                    }
+                )]
             )]
         ),
     ));

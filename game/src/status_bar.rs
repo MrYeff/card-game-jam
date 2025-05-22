@@ -17,27 +17,27 @@ pub trait IntoStatusBar: Send + Sync + 'static {
 
 #[derive(Component)]
 #[relationship_target(relationship=StatusBarOf)]
-pub struct StatusBarRef(Vec<Entity>);
+pub struct StatusBar(Vec<Entity>);
 
 #[derive(Component)]
-#[relationship(relationship_target=StatusBarRef)]
+#[relationship(relationship_target=StatusBar)]
+#[require(StatusBarDir, Sprite = enforce_exists!(Sprite))]
 pub struct StatusBarOf(pub Entity);
 
-#[derive(Component)]
-#[require(StatusBarOf = enforce_exists!(StatusBarOf), Sprite = enforce_exists!(Sprite))]
+#[derive(Component, Default)]
 #[component(immutable)]
-pub struct StatusBar {
-    size: Vec2,
-}
-
-impl StatusBar {
-    pub fn new(size: Vec2) -> Self {
-        Self { size }
-    }
+pub enum StatusBarDir {
+    #[default]
+    Horizontal,
+    Vertical,
 }
 
 #[derive(Component)]
-#[require(StatusBar = enforce_exists!(StatusBar))]
+#[component(immutable)]
+struct ContainerSize(Vec2);
+
+#[derive(Component)]
+#[require(StatusBarOf = enforce_exists!(StatusBarOf))]
 #[component(immutable)]
 pub struct StatusBarType<T: IntoStatusBar>(PhantomData<T>);
 
@@ -46,16 +46,6 @@ impl<T: IntoStatusBar> Default for StatusBarType<T> {
         Self(Default::default())
     }
 }
-
-#[derive(Component)]
-#[require(StatusBar = enforce_exists!(StatusBar))]
-#[component(immutable)]
-pub struct StatusBarBackground(pub Sprite);
-
-#[derive(Component)]
-#[require(StatusBar = enforce_exists!(StatusBar))]
-#[component(immutable)]
-pub struct StatusBarBorder(pub Sprite);
 
 pub struct StatusBarPlugin<T: IntoStatusBar>(PhantomData<T>);
 
@@ -75,55 +65,33 @@ impl<T: IntoStatusBar> Plugin for StatusBarPlugin<T> {
 
 #[allow(clippy::type_complexity)]
 fn handle_new<T: IntoStatusBar>(
-    tr: Trigger<OnInsert, StatusBar>,
-    mut status_bars: Query<
-        (
-            &mut Sprite,
-            &StatusBar,
-            &StatusBarOf,
-            Option<&StatusBarBackground>,
-            Option<&StatusBarBorder>,
-        ),
-        With<StatusBarType<T>>,
-    >,
+    tr: Trigger<OnInsert, StatusBarOf>,
+    mut status_bars: Query<(&mut Sprite, &StatusBarOf, &StatusBarDir), With<StatusBarType<T>>>,
     targets: Query<(&T::GetMaxValue, &T::GetValue)>,
     mut commands: Commands,
 ) {
     let e = tr.target();
-    let (mut sprite, bar, tatget, bg, border) = status_bars.get_mut(e).unwrap();
-    let (max_val, val) = targets.get(tatget.0).unwrap();
+    let (mut sprite, target, dir) = status_bars.get_mut(e).unwrap();
+    let (max_val, val) = targets.get(target.0).unwrap();
 
-    let progress_size = bar.size.with_x(bar.size.x * val.get() / max_val.get());
+    let size = sprite
+        .custom_size
+        .expect("Sprite should have customs size!"); // TODO retrieve actual size
+    commands.entity(e).insert(ContainerSize(size));
+
+    let frac = val.get() / max_val.get();
+    let progress_size = match dir {
+        StatusBarDir::Horizontal => size.with_x(size.x * frac),
+        StatusBarDir::Vertical => size.with_y(size.y * frac),
+    };
+
     sprite.custom_size = Some(progress_size);
-    sprite.anchor = Anchor::CenterLeft;
-
-    if let Some(bg) = bg {
-        commands.entity(e).with_child((
-            Transform::from_xyz(0.0, 0.0, -1.0),
-            Sprite {
-                custom_size: Some(bar.size),
-                anchor: Anchor::CenterLeft,
-                ..bg.0.clone()
-            },
-        ));
-    }
-
-    if let Some(border) = border {
-        commands.entity(e).with_child((
-            Transform::from_xyz(0.0, 0.0, 1.0),
-            Sprite {
-                custom_size: Some(bar.size),
-                anchor: Anchor::CenterLeft,
-                ..border.0.clone()
-            },
-        ));
-    }
 }
 
 fn handle_change<T: IntoStatusBar>(
     tr: Trigger<OnInsert, (T::GetValue, T::GetMaxValue)>,
-    targets: Query<(&T::GetMaxValue, &T::GetValue, &StatusBarRef)>,
-    mut status_bars: Query<(&mut Sprite, &StatusBar)>,
+    targets: Query<(&T::GetMaxValue, &T::GetValue, &StatusBar)>,
+    mut status_bars: Query<(&mut Sprite, &ContainerSize, &StatusBarDir)>,
 ) {
     let target = tr.target();
     let Ok((max_val, val, bar_ref)) = targets.get(target) else {
@@ -134,16 +102,23 @@ fn handle_change<T: IntoStatusBar>(
         return;
     };
 
-    let (mut sprite, bar) = status_bars.get_mut(*bar_entity).unwrap();
-    let progress_size = bar.size.with_x(bar.size.x * val.get() / max_val.get());
+    let (mut sprite, size, dir) = status_bars.get_mut(*bar_entity).unwrap();
+
+    let size = size.0;
+
+    let frac = val.get() / max_val.get();
+    let progress_size = match dir {
+        StatusBarDir::Horizontal => size.with_x(size.x * frac),
+        StatusBarDir::Vertical => size.with_y(size.y * frac),
+    };
 
     sprite.custom_size = Some(progress_size);
 }
 
 fn handle_remove<T: IntoStatusBar>(
     tr: Trigger<OnRemove, T::GetValue>,
-    targets: Query<&StatusBarRef>,
-    mut status_bars: Query<(&mut Sprite, &StatusBar)>,
+    targets: Query<&StatusBar>,
+    mut status_bars: Query<(&mut Sprite, &ContainerSize, &StatusBarDir)>,
 ) {
     let target = tr.target();
     let Ok(bar_ref) = targets.get(target) else {
@@ -154,8 +129,13 @@ fn handle_remove<T: IntoStatusBar>(
         return;
     };
 
-    let (mut sprite, bar) = status_bars.get_mut(*bar_entity).unwrap();
-    let progress_size = bar.size.with_x(0.0);
+    let (mut sprite, size, dir) = status_bars.get_mut(*bar_entity).unwrap();
+    let size = size.0;
+
+    let progress_size = match dir {
+        StatusBarDir::Horizontal => size.with_x(0.0),
+        StatusBarDir::Vertical => size.with_y(0.0),
+    };
 
     sprite.custom_size = Some(progress_size);
 }
