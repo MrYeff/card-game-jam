@@ -20,7 +20,9 @@ trait SpriteRepr: Component + Sized {
 
     fn handle_remove(tr: Trigger<OnRemove, Self>, mut commands: Commands) {
         let entity = tr.target();
-        commands.entity(entity).remove::<Sprite>();
+        if let Ok(mut ec) = commands.get_entity(entity) {
+            ec.try_remove::<Sprite>();
+        }
     }
 }
 

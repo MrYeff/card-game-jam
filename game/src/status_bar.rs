@@ -1,10 +1,6 @@
-use std::{default, marker::PhantomData};
+use std::marker::PhantomData;
 
-use bevy::{
-    ecs::{component::Immutable, relationship},
-    prelude::*,
-    sprite::Anchor,
-};
+use bevy::prelude::*;
 
 pub trait GetValue {
     fn get(&self) -> f32;

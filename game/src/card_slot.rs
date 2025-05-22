@@ -21,7 +21,16 @@ pub struct PlacedOnSlot(pub Entity);
 #[relationship_target(relationship=PlacedOnSlot)]
 pub struct PlacementOfCard(Entity);
 
+impl PlacementOfCard {
+    pub fn get(&self) -> Entity {
+        self.0
+    }
+}
+
 pub struct CardSlotPlugin;
+
+#[derive(Event)]
+pub struct RecievedCard(pub Entity);
 
 impl Plugin for CardSlotPlugin {
     fn build(&self, app: &mut App) {
@@ -35,14 +44,18 @@ fn handle_placed_on_added(
     placed_on: Query<&PlacedOnSlot>,
     mut commands: Commands,
 ) {
-    let entity = tr.target();
-    commands.entity(entity).insert((
-        ChildOf(placed_on.get(entity).unwrap().0),
-        Transform::from_xyz(0.0, 0.0, 1.0),
-    ));
+    let card = tr.target();
+    let slot = placed_on.get(card).unwrap().0;
+    commands
+        .entity(card)
+        .insert((ChildOf(slot), Transform::from_xyz(0.0, 0.0, 1.0)));
+
+    commands.entity(slot).trigger(RecievedCard(card));
 }
 
 fn handle_placed_on_removed(tr: Trigger<OnRemove, PlacedOnSlot>, mut commands: Commands) {
     let entity = tr.target();
-    commands.entity(entity).remove::<ChildOf>();
+    if let Ok(mut ec) = commands.get_entity(entity) {
+        ec.try_remove::<ChildOf>();
+    }
 }

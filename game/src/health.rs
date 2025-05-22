@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use bevy::{ecs::world::OnDespawn, prelude::*};
+use bevy::prelude::*;
 
 use crate::status_bar::{GetValue, IntoStatusBar};
 
@@ -11,22 +11,10 @@ pub struct MaxHealth(pub u32);
 #[derive(Component)]
 #[require(MaxHealth = enforce_exists!(MaxHealth))]
 #[component(immutable)]
-pub struct Health(u32);
+pub struct Health(pub u32);
 
 #[derive(Event)]
 pub struct AdjustHealth(pub i32);
-
-impl Health {
-    #[inline(always)]
-    pub fn new(val: u32) -> Self {
-        Health(val)
-    }
-
-    #[inline(always)]
-    pub fn get(&self) -> u32 {
-        self.0
-    }
-}
 
 pub struct HealthPlugin;
 
